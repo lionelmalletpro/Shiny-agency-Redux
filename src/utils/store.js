@@ -12,6 +12,11 @@ const reducer = combineReducers({
 // pour initialiser le store
 // Pas besoin de passer de state initial
 // car chaque reducer à son propre state initial
-const store = createStore(reducer)
+const reduxDevtools =
+  window.__REDUX_DEVTOOLS_EXTENSION__ && window.__REDUX_DEVTOOLS_EXTENSION__()
+
+// connecter le store en plus
+// on AJOUTE ----------------------V
+const store = createStore(reducer, reduxDevtools)
 
 export default store
