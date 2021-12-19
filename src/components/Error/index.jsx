@@ -1,6 +1,7 @@
 import styled from 'styled-components'
 import colors from '../../utils/style/colors'
-import { useTheme } from '../../utils/hooks'
+import { selectTheme } from '../../utils/selectors'
+import { useSelector } from 'react-redux'
 import ErrorIllustration from '../../assets/404.svg'
 
 const ErrorWrapper = styled.div`
@@ -27,7 +28,7 @@ const Illustration = styled.img`
 `
 
 function Error() {
-  const { theme } = useTheme()
+  const theme = useSelector(selectTheme)
 
   return (
     <ErrorWrapper theme={theme}>
