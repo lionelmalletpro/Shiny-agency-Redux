@@ -1,9 +1,11 @@
-import { useState, useEffect } from 'react'
+import { useEffect } from 'react'
 import styled from 'styled-components'
 import { useParams } from 'react-router-dom'
 import colors from '../../utils/style/colors'
-import { useSelector } from 'react-redux'
-import { selectTheme } from '../../utils/selectors'
+import { useSelector, useStore } from 'react-redux'
+import { selectFreelance, selectTheme } from '../../utils/selectors'
+import { fetchOrUpdateFreelance } from '../../features/freelance'
+import { Loader } from '../../utils/style/Atoms'
 
 const ProfileWrapper = styled.div`
   display: flex;
@@ -88,43 +90,60 @@ const Availability = styled.span`
   position: relative;
 `
 
+const LoaderWrapper = styled.div`
+  display: flex;
+  justify-content: center;
+`
+
 function Profile() {
   const theme = useSelector(selectTheme)
-  const { id: queryId } = useParams()
-  const [profileData, setProfileData] = useState({})
+  const { id: freelanceId } = useParams()
+  const store = useStore()
   useEffect(() => {
-    fetch(`http://localhost:8000/freelance?id=${queryId}`)
-      .then((response) => response.json())
-      .then((jsonResponse) => {
-        setProfileData(jsonResponse?.freelanceData)
-      })
-  }, [queryId])
+    fetchOrUpdateFreelance(store, freelanceId)
+  }, [store, freelanceId])
+  const freelance = useSelector(selectFreelance(freelanceId))
+
+  const profileData = freelance.data?.freelanceData ?? {}
 
   const { picture, name, location, tjm, job, skills, available, id } =
     profileData
 
+  if (freelance.status === 'rejected') {
+    return <span>Il y a un problème</span>
+  }
+
+  const isLoading =
+    freelance.status === 'void' || freelance.status === 'pending'
+
   return (
     <ProfileWrapper theme={theme}>
-      <Picture src={picture} alt={name} height={150} width={150} />
-      <ProfileDetails theme={theme}>
-        <TitleWrapper>
-          <Title>{name}</Title>
-          <Location>{location}</Location>
-        </TitleWrapper>
-        <JobTitle>{job}</JobTitle>
-        <SkillsWrapper>
-          {skills &&
-            skills.map((skill) => (
-              <Skill key={`skill-${skill}-${id}`} theme={theme}>
-                {skill}
-              </Skill>
-            ))}
-        </SkillsWrapper>
-        <Availability available={available}>
-          {available ? 'Disponible maintenant' : 'Indisponible'}
-        </Availability>
-        <Price>{tjm} € / jour</Price>
-      </ProfileDetails>
+      {isLoading ? (
+        <LoaderWrapper>
+          <Loader theme={theme} data-testid="loader" />
+        </LoaderWrapper>
+      ) : (
+        <ProfileDetails theme={theme}>
+          <Picture src={picture} alt={name} height={150} width={150} />
+          <TitleWrapper>
+            <Title>{name}</Title>
+            <Location>{location}</Location>
+          </TitleWrapper>
+          <JobTitle>{job}</JobTitle>
+          <SkillsWrapper>
+            {skills &&
+              skills.map((skill) => (
+                <Skill key={`skill-${skill}-${id}`} theme={theme}>
+                  {skill}
+                </Skill>
+              ))}
+          </SkillsWrapper>
+          <Availability available={available}>
+            {available ? 'Disponible maintenant' : 'Indisponible'}
+          </Availability>
+          <Price>{tjm} € / jour</Price>
+        </ProfileDetails>
+      )}
     </ProfileWrapper>
   )
 }
